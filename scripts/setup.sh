@@ -57,15 +57,16 @@ npx skills@latest add Leonxlnx/taste-skill --skill design-taste-frontend --yes
 # The ecc@ecc plugin above already provides the ecc: skills/agents/commands.
 # Run the full everything-claude-code installer only if you want the complete
 # rules + hooks + framework modules copied into ~/.claude. Enable with:
-#   ECC_FULL=1 bash setup.sh   (default language: typescript)
+#   ECC_FULL=1 bash setup.sh   (default languages: typescript python golang)
 # ---------------------------------------------------------------------------
 if [ "${ECC_FULL:-0}" = "1" ]; then
   echo ""
   echo "[3/3] ECC full install (everything-claude-code)"
-  ECC_LANG="${ECC_LANG:-typescript}"
+  ECC_LANG="${ECC_LANG:-typescript python golang}"
   tmp="$(mktemp -d)"
   git clone --depth 1 https://github.com/affaan-m/everything-claude-code.git "$tmp/ecc"
-  (cd "$tmp/ecc" && ./install.sh "$ECC_LANG")
+  # unquoted on purpose: multiple languages must split into separate args
+  (cd "$tmp/ecc" && ./install.sh $ECC_LANG)
 else
   echo ""
   echo "[3/3] ECC full install skipped (ecc plugin already installed). Set ECC_FULL=1 to run it."

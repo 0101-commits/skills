@@ -60,5 +60,6 @@ The `ecc@ecc` plugin already provides ecc skills/agents/commands. For the full
 rules + hooks + framework modules copied into `~/.claude`:
 
 ```bash
-ECC_FULL=1 ECC_LANG=typescript bash scripts/setup.sh
+# default languages: typescript python golang
+ECC_FULL=1 bash scripts/setup.sh
 ```

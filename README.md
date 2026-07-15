@@ -64,12 +64,16 @@ npx skills@latest add 0101-commits/skills
 `ecc@ecc` 플러그인이 ecc 스킬/에이전트/커맨드를 이미 제공한다. rules + hooks + 프레임워크 모듈까지
 `~/.claude`에 복사하는 전체 설치는 선택 사항:
 
+기본 언어: `typescript python golang` (전부). `ECC_LANG`로 재정의.
+
 ```bash
 # bash
-ECC_FULL=1 ECC_LANG=typescript bash scripts/setup.sh
+ECC_FULL=1 bash scripts/setup.sh                      # typescript python golang
+ECC_FULL=1 ECC_LANG=typescript bash scripts/setup.sh  # 특정 언어만
 ```
 ```powershell
 # PowerShell
+$env:ECC_FULL="1"; ./scripts/setup.ps1                       # typescript python golang
 $env:ECC_FULL="1"; $env:ECC_LANG="typescript"; ./scripts/setup.ps1
 ```
 
@@ -77,5 +81,5 @@ $env:ECC_FULL="1"; $env:ECC_LANG="typescript"; ./scripts/setup.ps1
 ```bash
 git clone https://github.com/affaan-m/everything-claude-code.git
 cd everything-claude-code
-./install.sh typescript   # 또는 python, golang (여러 개 동시 가능)
+./install.sh typescript python golang   # 여러 언어 동시 설치
 ```
