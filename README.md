@@ -56,11 +56,11 @@ npx skills@latest add 0101-commits/skills
 | `caveman@caveman` | `JuliusBrussee/caveman` | `25d22f8` | 활성 | 초압축 커뮤니케이션 모드 + statusLine |
 | `mattpocock-skills@mattpocock` | `mattpocock/skills` | 1.2.0 | 활성 | TDD, 도메인 모델링, 디버깅, 코드리뷰 |
 | `andrej-karpathy-skills@karpathy-skills` | `forrestchang/andrej-karpathy-skills` | 1.0.0 | 활성 | Karpathy 코딩 가이드라인 |
-| `ponytail@ponytail` | `DietrichGebert/ponytail` | 4.8.4 | **설치됨·비활성** | 코드 리뷰/감사/기술부채 |
+| `ponytail@ponytail` | `DietrichGebert/ponytail` | 4.8.4 | 활성 | 코드 리뷰/감사/기술부채 |
 | `watch@claude-video` | `bradautomates/claude-video` | 0.1.3 | **설치됨·비활성** | 영상 자막/트랜스크립트 |
 
-비활성 두 개는 `~/.claude/settings.json` 의 `enabledPlugins` 에서 `false`. 켜려면 `true` 로 바꾸거나
-`/plugin` 에서 토글.
+`watch` 만 `~/.claude/settings.json` 의 `enabledPlugins` 에서 `false`. 켜려면 `true` 로 바꾸거나
+`/plugin` 에서 토글 — 적용은 Claude Code 재시작 또는 `/reload-plugins` 이후.
 
 ### 에이전트
 

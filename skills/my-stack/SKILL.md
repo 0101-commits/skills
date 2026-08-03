@@ -45,12 +45,12 @@ claude plugin install ui-ux-pro-max@ui-ux-pro-max-skill
 claude plugin install caveman@caveman
 claude plugin install mattpocock-skills@mattpocock
 claude plugin install andrej-karpathy-skills@karpathy-skills
-claude plugin install ponytail@ponytail        # installed but disabled by default
+claude plugin install ponytail@ponytail
 claude plugin install watch@claude-video       # installed but disabled by default
 ```
 
-`ponytail` and `watch` sit at `enabledPlugins: false` in `~/.claude/settings.json` — toggle
-with `/plugin` when needed.
+`watch` sits at `enabledPlugins: false` in `~/.claude/settings.json` — toggle with `/plugin`
+when needed, then restart or `/reload-plugins`.
 
 After installing OMC, write its global instructions:
 

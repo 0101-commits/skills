@@ -23,8 +23,8 @@ foreach ($m in $marketplaces) {
 }
 
 # plugin install targets (plugin@marketplace)
-# NOTE: watch@claude-video and ponytail@ponytail are installed but kept DISABLED
-#       (enabledPlugins=false in ~/.claude/settings.json). Installing them here
+# NOTE: watch@claude-video is installed but kept DISABLED
+#       (enabledPlugins=false in ~/.claude/settings.json). Installing it here
 #       keeps the option open; toggle with /plugin when needed.
 $plugins = @(
     "ecc@ecc",
