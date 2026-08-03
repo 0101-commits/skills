@@ -2,12 +2,16 @@
 
 Claude Code 스킬/플러그인/에이전트 전체 스택. 새 머신에서 한 번에 설치.
 
-마지막 실측 동기화: **2026-07-31** (플러그인 10개, npx 스킬 66개, 이 저장소 스킬 2개)
+마지막 실측 동기화: **2026-08-03** (플러그인 10개 전부 활성, npx 스킬 66개 전부 활성, 이 저장소 스킬 2개)
 
 설치 경로는 세 가지다:
 - **Claude Code 플러그인** — `claude plugin marketplace add` + `claude plugin install`
 - **npx skills 패키지** — `npx skills add` (`~/.agents/skills/` 실체 + `~/.claude/skills/` 심링크/정션)
 - **독립 CLI 도구** — pip/uv/npm 으로 설치되는 보조 도구 (선택)
+
+setup 스크립트는 설치에서 끝나지 않고 마지막에 `scripts/enable-all.js` 로 **전부 활성 상태까지
+맞춘다** — 플러그인 10개 `enabledPlugins:true`, `skillOverrides` 전체 제거(= 모든 스킬 노출).
+멱등이고 실행 전 `settings.json` 을 타임스탬프 백업한다.
 
 ## 설치 방법
 
@@ -25,6 +29,15 @@ curl -fsSL https://raw.githubusercontent.com/0101-commits/skills/main/scripts/se
 
 전제조건: `claude` CLI, `node`/`npx`, `git`, `python`(graphify용, 선택). 설치 후 Claude Code 재시작 또는 `/reload-plugins`.
 
+스크립트 단계: `[1/5]` 플러그인 → `[2/5]` npx 스킬 패키지 → `[3/5]` graphify CLI →
+`[4/5]` 전부 활성화(`enable-all.js`) → `[5/5]` ECC 전체 설치(선택, `ECC_FULL=1`).
+
+이미 설치된 머신에서 활성화만 다시 맞추려면:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/0101-commits/skills/main/scripts/enable-all.js | node
+```
+
 ### 방법 2: npx skills 패키지만
 
 ```bash
@@ -39,6 +52,9 @@ npx skills@latest add 0101-commits/skills
 |------|------|
 | `my-stack` | 전체 스택 설치 가이드 |
 | `graphify` | 임의 입력(코드·문서·논문·이미지·영상) → 질의 가능한 지식그래프. `/graphify` |
+
+스킬 외 스크립트: `scripts/setup.sh`·`scripts/setup.ps1`(전체 설치), `scripts/enable-all.js`
+(플러그인·스킬 전부 활성화).
 
 > `graphify`는 [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) (Apache-2.0, pypi `graphifyy`)
 > 스킬의 v0.9.31 스냅샷이다. 정식 최신 설치는 `pip install graphifyy && graphify install --platform claude`
@@ -82,12 +98,20 @@ npx skills@latest add 0101-commits/skills
 `~/.claude/skills/<name>` 정션(Windows)/심링크로 참조한다. lock 에는 있는데
 `~/.agents/skills/` 에 없으면 설치가 중단된 것 — 해당 패키지를 다시 `add` 하면 복구된다.
 
-### 컨텍스트 절약: skillOverrides
+### 활성 정책: 전부 on
 
-마케팅·한국어 스킬 대부분은 `~/.claude/settings.json` 의 `skillOverrides` 에서 `"off"` 로 꺼 둔다
-(50개). 필요할 때만 켠다. 2026-07-31 재설치분(`attribution`, `influencer-marketing`,
-`marketing-council`, `marketing-loops`, `remotion-*` 11개, `design-taste-frontend`, `mediabunny`)은
-아직 `off` 목록에 없어 활성 상태다.
+과거에는 마케팅·한국어 스킬 50개를 `skillOverrides: "off"` 로 꺼 뒀지만, 2026-08-03 부터는
+**66개 전부 활성**이다. `enable-all.js` 가 `skillOverrides` 를 통째로 비운다.
+
+대가: 매 턴 스킬 목록이 커진다. Claude Code 는 `skillListingBudgetFraction`(기본 컨텍스트의 1%)
+안에서 설명을 잘라 맞추므로 터지지는 않지만, 컨텍스트를 아끼려면 개별 스킬을 다시 끄면 된다:
+
+```json
+{ "skillOverrides": { "ads": "off", "sms": "name-only" } }
+```
+
+`off` = 모델·`/명령` 양쪽에서 숨김, `name-only` = 설명 생략, `user-invocable-only` = `/명령`만.
+단, `enable-all.js` 를 다시 돌리면 이 키들도 지워진다.
 
 ## 독립 CLI 도구 (선택)
 

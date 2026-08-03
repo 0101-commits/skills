@@ -3,11 +3,13 @@ set -e
 
 echo "==> Installing full Claude Code skill stack..."
 
+RAW_BASE="https://raw.githubusercontent.com/0101-commits/skills/main"
+
 # ---------------------------------------------------------------------------
-# [1/4] Claude Code plugins (marketplaces)
+# [1/5] Claude Code plugins (marketplaces)
 # ---------------------------------------------------------------------------
 echo ""
-echo "[1/4] Claude Code plugins"
+echo "[1/5] Claude Code plugins"
 
 # marketplace add sources (superpowers is on the official marketplace -> no add)
 marketplaces=(
@@ -53,7 +55,7 @@ echo "    (writes ~/.claude/CLAUDE-omc.md and the @CLAUDE-omc.md import)"
 # [2/4] npx skills packages
 # ---------------------------------------------------------------------------
 echo ""
-echo "[2/4] npx skills packages"
+echo "[2/5] npx skills packages"
 npx skills@latest add 0101-commits/skills --yes            # my-stack, graphify
 npx skills@latest add daleseo/korean-skills --yes          # 3 skills
 npx skills@latest add coreyhaines31/marketingskills --yes  # 49 skills
@@ -66,7 +68,7 @@ npx skills@latest add Leonxlnx/taste-skill --skill design-taste-frontend --yes
 # current and provides the `graphify` binary the skill drives.
 # ---------------------------------------------------------------------------
 echo ""
-echo "[3/4] graphify CLI"
+echo "[3/5] graphify CLI"
 if command -v uv >/dev/null 2>&1; then
   uv tool install --upgrade graphifyy || true
 elif command -v pip >/dev/null 2>&1; then
@@ -79,7 +81,23 @@ if command -v graphify >/dev/null 2>&1; then
 fi
 
 # ---------------------------------------------------------------------------
-# [4/4] ECC full install (optional deep install)
+# [4/5] Enable everything
+# Plugins install enabled, but a machine that previously disabled one keeps it
+# off, and skillOverrides can mute skills. enable-all.js normalizes both.
+# ---------------------------------------------------------------------------
+echo ""
+echo "[4/5] Enabling all plugins and skills"
+if [ -f "scripts/enable-all.js" ]; then
+  node scripts/enable-all.js
+elif [ -f "$(dirname "$0")/enable-all.js" ]; then
+  node "$(dirname "$0")/enable-all.js"
+else
+  # piped install (curl | bash) has no repo checkout — fetch the script
+  curl -fsSL "$RAW_BASE/scripts/enable-all.js" | node
+fi
+
+# ---------------------------------------------------------------------------
+# [5/5] ECC full install (optional deep install)
 # The ecc@ecc plugin above already provides the ecc: skills/agents/commands.
 # Run the full everything-claude-code installer only if you want the complete
 # rules + hooks + framework modules copied into ~/.claude. Enable with:
@@ -87,7 +105,7 @@ fi
 # ---------------------------------------------------------------------------
 if [ "${ECC_FULL:-0}" = "1" ]; then
   echo ""
-  echo "[4/4] ECC full install (everything-claude-code)"
+  echo "[5/5] ECC full install (everything-claude-code)"
   ECC_LANG="${ECC_LANG:-typescript python golang}"
   tmp="$(mktemp -d)"
   git clone --depth 1 https://github.com/affaan-m/everything-claude-code.git "$tmp/ecc"
@@ -95,10 +113,10 @@ if [ "${ECC_FULL:-0}" = "1" ]; then
   (cd "$tmp/ecc" && ./install.sh $ECC_LANG)
 else
   echo ""
-  echo "[4/4] ECC full install skipped (ecc plugin already installed). Set ECC_FULL=1 to run it."
+  echo "[5/5] ECC full install skipped (ecc plugin already installed). Set ECC_FULL=1 to run it."
 fi
 
 echo ""
-echo "Done! All skills installed."
+echo "Done! All plugins and skills installed and enabled."
 echo "Restart Claude Code or run /reload-plugins to apply."
 echo "Not wired by default (opt-in, see README): headroom-ai proxy, agentmemory."

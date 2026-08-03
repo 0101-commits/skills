@@ -5,8 +5,8 @@ description: Use when setting up Claude Code skills on a new machine or fresh in
 
 # My Stack Setup
 
-Installs the full Claude Code stack: 10 plugins + 5 npx skill packages (66 skills).
-Last verified against a live machine: 2026-07-31.
+Installs the full Claude Code stack: 10 plugins + 5 npx skill packages (66 skills), then
+forces everything to the enabled state. Last verified against a live machine: 2026-08-03.
 
 ## One-shot install (repo root)
 
@@ -21,6 +21,9 @@ curl -fsSL https://raw.githubusercontent.com/0101-commits/skills/main/scripts/se
 
 Prereqs: `claude` CLI, `node`/`npx`, `git`, `python` (optional, for graphify).
 Then restart Claude Code or run `/reload-plugins`.
+
+Steps: `[1/5]` plugins, `[2/5]` npx skill packages, `[3/5]` graphify CLI, `[4/5]` enable
+everything, `[5/5]` optional ECC full install (`ECC_FULL=1`).
 
 ## Claude Code plugins
 
@@ -72,8 +75,22 @@ Skills land in `~/.agents/skills/<name>/` with a symlink/junction at `~/.claude/
 `~/skills-lock.json` is the source of truth: if an entry is in the lock but missing from
 `~/.agents/skills/`, the install was interrupted — re-run that package's `add`.
 
-Most marketing/Korean skills are turned off via `skillOverrides` in `~/.claude/settings.json`
-to save context. Turn them on individually when needed.
+## Enable everything
+
+Install alone can leave the stack half-on: a machine that previously set a plugin to
+`enabledPlugins: false` keeps it off, and `skillOverrides` can mute skills. Step `[4/5]` runs
+`scripts/enable-all.js`, which flips all ten plugins to `true` and clears `skillOverrides`
+entirely (all 66 skills listed). It is idempotent and backs up `settings.json` first.
+
+Run it standalone on an already-installed machine:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/0101-commits/skills/main/scripts/enable-all.js | node
+```
+
+To trade skill coverage back for context, re-add specific overrides — `"off"` hides a skill
+from both the model and `/name`, `"name-only"` drops its description,
+`"user-invocable-only"` keeps only `/name`. Re-running `enable-all.js` clears them again.
 
 ## graphify CLI
 

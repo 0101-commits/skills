@@ -1,9 +1,11 @@
 Write-Host "==> Installing full Claude Code skill stack..." -ForegroundColor Cyan
 
+$RawBase = "https://raw.githubusercontent.com/0101-commits/skills/main"
+
 # ---------------------------------------------------------------------------
-# [1/4] Claude Code plugins (marketplaces)
+# [1/5] Claude Code plugins (marketplaces)
 # ---------------------------------------------------------------------------
-Write-Host "`n[1/4] Claude Code plugins" -ForegroundColor Yellow
+Write-Host "`n[1/5] Claude Code plugins" -ForegroundColor Yellow
 
 # marketplace add sources (superpowers is on the official marketplace -> no add)
 $marketplaces = @(
@@ -48,7 +50,7 @@ Write-Host "    (writes ~/.claude/CLAUDE-omc.md and the @CLAUDE-omc.md import)" 
 # ---------------------------------------------------------------------------
 # [2/4] npx skills packages
 # ---------------------------------------------------------------------------
-Write-Host "`n[2/4] npx skills packages" -ForegroundColor Yellow
+Write-Host "`n[2/5] npx skills packages" -ForegroundColor Yellow
 npx skills@latest add 0101-commits/skills --yes             # my-stack, graphify
 npx skills@latest add daleseo/korean-skills --yes           # 3 skills
 npx skills@latest add coreyhaines31/marketingskills --yes   # 49 skills
@@ -60,7 +62,7 @@ npx skills@latest add Leonxlnx/taste-skill --skill design-taste-frontend --yes
 # The skill ships in this repo as a pinned snapshot; the pip package keeps it
 # current and provides the `graphify` binary the skill drives.
 # ---------------------------------------------------------------------------
-Write-Host "`n[3/4] graphify CLI" -ForegroundColor Yellow
+Write-Host "`n[3/5] graphify CLI" -ForegroundColor Yellow
 if (Get-Command uv -ErrorAction SilentlyContinue) {
     try { uv tool install --upgrade graphifyy } catch { }
 } elseif (Get-Command pip -ErrorAction SilentlyContinue) {
@@ -73,14 +75,37 @@ if (Get-Command graphify -ErrorAction SilentlyContinue) {
 }
 
 # ---------------------------------------------------------------------------
-# [4/4] ECC full install (optional deep install)
+# [4/5] Enable everything
+# Plugins install enabled, but a machine that previously disabled one keeps it
+# off, and skillOverrides can mute skills. enable-all.js normalizes both.
+# ---------------------------------------------------------------------------
+Write-Host "`n[4/5] Enabling all plugins and skills" -ForegroundColor Yellow
+$enableLocal = $null
+if (Test-Path "scripts/enable-all.js") {
+    $enableLocal = "scripts/enable-all.js"
+} elseif ($PSScriptRoot) {
+    $sibling = Join-Path $PSScriptRoot "enable-all.js"
+    if (Test-Path $sibling) { $enableLocal = $sibling }
+}
+if ($enableLocal) {
+    node $enableLocal
+} else {
+    # piped install (irm | iex) has no repo checkout - fetch the script
+    $tmpJs = Join-Path $env:TEMP "enable-all.js"
+    Invoke-WebRequest -Uri "$RawBase/scripts/enable-all.js" -OutFile $tmpJs -UseBasicParsing
+    node $tmpJs
+    Remove-Item $tmpJs -Force -ErrorAction SilentlyContinue
+}
+
+# ---------------------------------------------------------------------------
+# [5/5] ECC full install (optional deep install)
 # The ecc@ecc plugin above already provides the ecc: skills/agents/commands.
 # Run the full everything-claude-code installer only if you want the complete
 # rules + hooks + framework modules copied into ~/.claude. Enable with:
 #   $env:ECC_FULL = "1"; ./setup.ps1   (default languages: typescript python golang)
 # ---------------------------------------------------------------------------
 if ($env:ECC_FULL -eq "1") {
-    Write-Host "`n[4/4] ECC full install (everything-claude-code)" -ForegroundColor Yellow
+    Write-Host "`n[5/5] ECC full install (everything-claude-code)" -ForegroundColor Yellow
     $langStr = if ($env:ECC_LANG) { $env:ECC_LANG } else { "typescript python golang" }
     $langs = $langStr -split '\s+'
     $tmp = Join-Path $env:TEMP ("ecc-" + [System.Guid]::NewGuid().ToString())
@@ -90,9 +115,9 @@ if ($env:ECC_FULL -eq "1") {
     bash ./install.sh @langs
     Pop-Location
 } else {
-    Write-Host "`n[4/4] ECC full install skipped (ecc plugin already installed). Set `$env:ECC_FULL='1' to run it." -ForegroundColor Gray
+    Write-Host "`n[5/5] ECC full install skipped (ecc plugin already installed). Set `$env:ECC_FULL='1' to run it." -ForegroundColor Gray
 }
 
-Write-Host "`nDone! All skills installed." -ForegroundColor Green
+Write-Host "`nDone! All plugins and skills installed and enabled." -ForegroundColor Green
 Write-Host "Restart Claude Code or run /reload-plugins to apply." -ForegroundColor Gray
 Write-Host "Not wired by default (opt-in, see README): headroom-ai proxy, agentmemory." -ForegroundColor Gray
