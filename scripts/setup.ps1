@@ -23,9 +23,8 @@ foreach ($m in $marketplaces) {
 }
 
 # plugin install targets (plugin@marketplace)
-# NOTE: watch@claude-video is installed but kept DISABLED
-#       (enabledPlugins=false in ~/.claude/settings.json). Installing it here
-#       keeps the option open; toggle with /plugin when needed.
+# NOTE: all ten are enabled (enabledPlugins=true in ~/.claude/settings.json).
+#       Turn any of them off with /plugin after install.
 $plugins = @(
     "ecc@ecc",
     "oh-my-claudecode@omc",
