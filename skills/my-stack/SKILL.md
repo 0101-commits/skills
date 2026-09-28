@@ -8,16 +8,22 @@ description: Use when setting up Claude Code skills on a new machine or fresh in
 Installs the full Claude Code stack: 10 plugins + 5 npx skill packages (66 skills), then
 forces everything to the enabled state. Last verified against a live machine: 2026-08-03.
 
-## One-shot install (repo root)
+## One-shot install
+
+Clone first — works whether the repo is public or private (private needs a GitHub login:
+`gh auth login` or Git Credential Manager).
 
 ```powershell
 # PowerShell
-irm https://raw.githubusercontent.com/0101-commits/skills/main/scripts/setup.ps1 | iex
+git clone https://github.com/0101-commits/skills.git $HOME\skills; cd $HOME\skills; .\scripts\setup.ps1
 ```
 ```bash
 # bash
-curl -fsSL https://raw.githubusercontent.com/0101-commits/skills/main/scripts/setup.sh | bash
+git clone https://github.com/0101-commits/skills.git ~/skills && cd ~/skills && bash scripts/setup.sh
 ```
+
+Piped one-liners (`irm .../setup.ps1 | iex`, `curl .../setup.sh | bash`) fetch from
+`raw.githubusercontent.com` without auth, so they only work while the repo is public.
 
 Prereqs: `claude` CLI, `node`/`npx`, `git`, `python` (optional, for graphify).
 Then restart Claude Code or run `/reload-plugins`.
@@ -64,7 +70,7 @@ After installing OMC, write its global instructions:
 ## npx skills packages
 
 ```bash
-npx skills@latest add 0101-commits/skills --yes            # my-stack, graphify
+npx skills@latest add 0101-commits/skills --yes            # my-stack, graphify (private: needs git credentials)
 npx skills@latest add daleseo/korean-skills --yes          # 3
 npx skills@latest add coreyhaines31/marketingskills --yes  # 49
 npx skills@latest add remotion-dev/skills --yes            # 12
@@ -82,10 +88,10 @@ Install alone can leave the stack half-on: a machine that previously set a plugi
 `scripts/enable-all.js`, which flips all ten plugins to `true` and clears `skillOverrides`
 entirely (all 66 skills listed). It is idempotent and backs up `settings.json` first.
 
-Run it standalone on an already-installed machine:
+Run it standalone on an already-installed machine (from the clone):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/0101-commits/skills/main/scripts/enable-all.js | node
+node scripts/enable-all.js
 ```
 
 To trade skill coverage back for context, re-add specific overrides — `"off"` hides a skill

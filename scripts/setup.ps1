@@ -2,6 +2,16 @@ Write-Host "==> Installing full Claude Code skill stack..." -ForegroundColor Cya
 
 $RawBase = "https://raw.githubusercontent.com/0101-commits/skills/main"
 
+# Repo checkout root, if this script runs from a clone (cwd = repo root, or
+# invoked as scripts/setup.ps1). $null for a piped install (irm | iex).
+$Warn = $false
+$RepoDir = $null
+if (Test-Path "skills/my-stack/SKILL.md") {
+    $RepoDir = (Get-Location).Path
+} elseif ($PSScriptRoot -and (Test-Path (Join-Path $PSScriptRoot "../skills/my-stack/SKILL.md"))) {
+    $RepoDir = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+}
+
 # ---------------------------------------------------------------------------
 # [1/5] Claude Code plugins (marketplaces)
 # ---------------------------------------------------------------------------
@@ -48,17 +58,29 @@ Write-Host "  ! OMC global instructions: run /oh-my-claudecode:omc-setup inside 
 Write-Host "    (writes ~/.claude/CLAUDE-omc.md and the @CLAUDE-omc.md import)" -ForegroundColor Gray
 
 # ---------------------------------------------------------------------------
-# [2/4] npx skills packages
+# [2/5] npx skills packages
 # ---------------------------------------------------------------------------
 Write-Host "`n[2/5] npx skills packages" -ForegroundColor Yellow
+# this repo: remote first; if that fails (private repo without git credentials),
+# fall back to the local checkout so the rest of the install still runs.
 npx skills@latest add 0101-commits/skills --yes             # my-stack, graphify
+if ($LASTEXITCODE -ne 0) {
+    if ($RepoDir) {
+        Write-Host "  ! remote add failed - installing from local checkout: $RepoDir" -ForegroundColor Gray
+        npx skills@latest add $RepoDir --yes
+    } else {
+        Write-Host "  ! 0101-commits/skills add failed. If the repo is private, run 'gh auth login'" -ForegroundColor Gray
+        Write-Host "    (or sign in with Git Credential Manager), then re-run this script." -ForegroundColor Gray
+        $Warn = $true
+    }
+}
 npx skills@latest add daleseo/korean-skills --yes           # 3 skills
 npx skills@latest add coreyhaines31/marketingskills --yes   # 49 skills
 npx skills@latest add remotion-dev/skills --yes             # 12 skills
 npx skills@latest add Leonxlnx/taste-skill --skill design-taste-frontend --yes
 
 # ---------------------------------------------------------------------------
-# [3/4] graphify CLI (optional but recommended)
+# [3/5] graphify CLI (optional but recommended)
 # The skill ships in this repo as a pinned snapshot; the pip package keeps it
 # current and provides the `graphify` binary the skill drives.
 # ---------------------------------------------------------------------------
@@ -80,20 +102,19 @@ if (Get-Command graphify -ErrorAction SilentlyContinue) {
 # off, and skillOverrides can mute skills. enable-all.js normalizes both.
 # ---------------------------------------------------------------------------
 Write-Host "`n[4/5] Enabling all plugins and skills" -ForegroundColor Yellow
-$enableLocal = $null
-if (Test-Path "scripts/enable-all.js") {
-    $enableLocal = "scripts/enable-all.js"
-} elseif ($PSScriptRoot) {
-    $sibling = Join-Path $PSScriptRoot "enable-all.js"
-    if (Test-Path $sibling) { $enableLocal = $sibling }
-}
-if ($enableLocal) {
-    node $enableLocal
+if ($RepoDir) {
+    node (Join-Path $RepoDir "scripts/enable-all.js")
 } else {
     # piped install (irm | iex) has no repo checkout - fetch the script
     $tmpJs = Join-Path $env:TEMP "enable-all.js"
-    Invoke-WebRequest -Uri "$RawBase/scripts/enable-all.js" -OutFile $tmpJs -UseBasicParsing
-    node $tmpJs
+    try {
+        Invoke-WebRequest -Uri "$RawBase/scripts/enable-all.js" -OutFile $tmpJs -UseBasicParsing -ErrorAction Stop
+        node $tmpJs
+    } catch {
+        Write-Host "  ! could not download enable-all.js (private repo?). Clone the repo and run:" -ForegroundColor Gray
+        Write-Host "    node scripts/enable-all.js" -ForegroundColor Gray
+        $Warn = $true
+    }
     Remove-Item $tmpJs -Force -ErrorAction SilentlyContinue
 }
 
@@ -118,6 +139,10 @@ if ($env:ECC_FULL -eq "1") {
     Write-Host "`n[5/5] ECC full install skipped (ecc plugin already installed). Set `$env:ECC_FULL='1' to run it." -ForegroundColor Gray
 }
 
-Write-Host "`nDone! All plugins and skills installed and enabled." -ForegroundColor Green
+if ($Warn) {
+    Write-Host "`nDone with warnings - see the '!' lines above; those steps did not complete." -ForegroundColor Yellow
+} else {
+    Write-Host "`nDone! All plugins and skills installed and enabled." -ForegroundColor Green
+}
 Write-Host "Restart Claude Code or run /reload-plugins to apply." -ForegroundColor Gray
 Write-Host "Not wired by default (opt-in, see README): headroom-ai proxy, agentmemory." -ForegroundColor Gray
