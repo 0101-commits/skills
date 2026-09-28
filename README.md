@@ -13,37 +13,68 @@ setup 스크립트는 설치에서 끝나지 않고 마지막에 `scripts/enable
 맞춘다** — 플러그인 10개 `enabledPlugins:true`, `skillOverrides` 전체 제거(= 모든 스킬 노출).
 멱등이고 실행 전 `settings.json` 을 타임스탬프 백업한다.
 
+## 저장소 구조
+
+```
+skills/                      ← 저장소 루트
+├─ README.md                 ← 이 문서 (스택 인벤토리 + 설치 안내)
+├─ scripts/
+│  ├─ setup.ps1              ← 전체 설치 (Windows PowerShell)
+│  ├─ setup.sh               ← 전체 설치 (bash)
+│  └─ enable-all.js          ← 플러그인·스킬 전부 활성화 (settings.json 정규화)
+└─ skills/                   ← npx skills 로 배포되는 스킬
+   ├─ my-stack/SKILL.md      ← 전체 스택 설치 가이드 스킬
+   └─ graphify/              ← Graphify v0.9.31 스냅샷 (LICENSE·NOTICE 포함)
+```
+
 ## 설치 방법
 
-### 방법 1: 스크립트로 전체 자동 설치 (권장)
+### 방법 1: 클론 후 스크립트 실행 (권장 — public/private 모두 동작)
 
-**PowerShell:**
+**PowerShell (Windows):**
 ```powershell
-irm https://raw.githubusercontent.com/0101-commits/skills/main/scripts/setup.ps1 | iex
+git clone https://github.com/0101-commits/skills.git $HOME\skills; cd $HOME\skills; .\scripts\setup.ps1
 ```
 
 **bash:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/0101-commits/skills/main/scripts/setup.sh | bash
+git clone https://github.com/0101-commits/skills.git ~/skills && cd ~/skills && bash scripts/setup.sh
 ```
 
 전제조건: `claude` CLI, `node`/`npx`, `git`, `python`(graphify용, 선택). 설치 후 Claude Code 재시작 또는 `/reload-plugins`.
+저장소가 private 이면 `git clone` 전에 GitHub 로그인이 필요하다(아래 [Private 운영](#private-운영) 참고).
 
 스크립트 단계: `[1/5]` 플러그인 → `[2/5]` npx 스킬 패키지 → `[3/5]` graphify CLI →
 `[4/5]` 전부 활성화(`enable-all.js`) → `[5/5]` ECC 전체 설치(선택, `ECC_FULL=1`).
+클론에서 실행하면 `[2/5]` 에서 이 저장소 원격 설치가 실패해도 로컬 체크아웃으로 자동 대체되고,
+`[4/5]` 는 로컬 `scripts/enable-all.js` 를 쓴다. 실패한 단계가 있으면 마지막 줄이
+`Done with warnings` 로 바뀐다.
 
-이미 설치된 머신에서 활성화만 다시 맞추려면:
+이미 설치된 머신에서 활성화만 다시 맞추려면 (클론 폴더에서):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/0101-commits/skills/main/scripts/enable-all.js | node
+node scripts/enable-all.js
 ```
 
-### 방법 2: npx skills 패키지만
+### 방법 2: 한 줄 설치 (저장소가 public 일 때만)
+
+`raw.githubusercontent.com` 은 로그인 없이 요청하므로 **private 저장소에서는 404 로 실패한다.**
+
+```powershell
+irm https://raw.githubusercontent.com/0101-commits/skills/main/scripts/setup.ps1 | iex
+```
+```bash
+curl -fsSL https://raw.githubusercontent.com/0101-commits/skills/main/scripts/setup.sh | bash
+```
+
+### 방법 3: npx skills 패키지만
 
 ```bash
 npx skills@latest add 0101-commits/skills
 ```
 
+private 이면 로컬 git 자격 증명(`gh auth login` 또는 Git Credential Manager)이 있어야 한다.
+`skills` CLI 는 `GIT_TERMINAL_PROMPT=0` 으로 clone 하므로 로그인 창이 뜨지 않고 바로 실패한다.
 설치 후 Claude Code에서 `/my-stack` 스킬로 전체 설치 안내 확인.
 
 ## 이 저장소가 제공하는 스킬
@@ -57,7 +88,8 @@ npx skills@latest add 0101-commits/skills
 (플러그인·스킬 전부 활성화).
 
 > `graphify`는 [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) (Apache-2.0, pypi `graphifyy`)
-> 스킬의 v0.9.31 스냅샷이다. 정식 최신 설치는 `pip install graphifyy && graphify install --platform claude`
+> 스킬의 v0.9.31 스냅샷이다. 재배포 조건에 따라 원본 `LICENSE`·`LICENSE-MIT`·`NOTICE` 를
+> `skills/graphify/` 에 함께 둔다(출처: pypi `graphifyy-0.9.31` wheel 의 `dist-info/licenses/`). 정식 최신 설치는 `pip install graphifyy && graphify install --platform claude`
 > (setup 스크립트가 이 경로를 쓴다). 저장소 사본은 오프라인/버전 고정용.
 
 ## Claude Code 플러그인 (10)
@@ -174,3 +206,23 @@ ECC 훅 주의: `GateGuard` 가 첫 Bash/Write 호출 전 사실 확인을 요�
 
 `~/.claude` 프로젝트 스코프에 `context7` 1개. 그 밖의 MCP(claude-in-chrome, Notion, Slack,
 PlayMCP 등)는 claude.ai 커넥터가 세션에 주입하는 것이라 이 저장소 범위가 아니다.
+
+## Private 운영
+
+이 저장소를 private 으로 전환해도 스킬·스크립트 자체는 동작한다. 바뀌는 것은 **접근 방식**뿐이다.
+
+| 항목 | public | private |
+|------|--------|---------|
+| `git clone` + `scripts/setup.*` (방법 1) | 동작 | 동작 (GitHub 로그인 필요) |
+| `irm`/`curl` 한 줄 설치 (방법 2) | 동작 | **404 실패** |
+| `npx skills add 0101-commits/skills` | 동작 | git 자격 증명 있으면 동작 |
+| 외부 플러그인·패키지 (ECC, OMC, marketingskills 등) | 동작 | 영향 없음 (타 저장소) |
+
+Windows 에서 1회 로그인 (둘 중 하나):
+
+```powershell
+winget install GitHub.cli; gh auth login
+```
+```powershell
+git clone https://github.com/0101-commits/skills.git $HOME\skills   # Git for Windows 의 Credential Manager 가 브라우저 로그인 창을 띄움
+```
